@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!--
+  ============================================================
+  GUIA RÁPIDO: COMO USAR ESTE ARQUIVO NO VS CODE
+  ============================================================
+
+  1. INSTALAR O VS CODE
+     → Acesse: https://code.visualstudio.com
+     → Baixe e instale normalmente
+
+  2. INSTALAR A EXTENSÃO LIVE SERVER
+     → Abra o VS Code
+     → Clique no ícone de quadradinhos na barra lateral esquerda
+       (ou pressione Ctrl+Shift+X no Windows / Cmd+Shift+X no Mac)
+     → Na caixa de busca, digite: Live Server
+     → Clique em "Install" na extensão de Ritwick Dey
+
+  3. ABRIR ESTE ARQUIVO
+     → No VS Code: File > Open File > selecione este arquivo .html
+
+  4. INICIAR O LIVE SERVER
+     → Clique com o botão direito em qualquer lugar do código
+     → Selecione "Open with Live Server"
+     → O jogo abre no navegador automaticamente!
+     → Toda vez que você salvar (Ctrl+S), o navegador atualiza sozinho.
+
+  ============================================================
+  ESTRUTURA DO ARQUIVO
+  ============================================================
+  Este arquivo tem 3 partes:
+
+  ① <style>   → APARÊNCIA (cores, fontes, tamanhos)
+  ② <body>    → ESTRUTURA (o que aparece na tela)
+  ③ <script>  → COMPORTAMENTO (como o jogo funciona)
+
+  Procure os comentários "① EDITE AQUI" para encontrar
+  os trechos mais fáceis de personalizar.
+  ============================================================
+  -->
+
+  <title>Feliz aniversário, Elisa!</title>
+
+  <style>
+
+    /* ======================================================
+       ① APARÊNCIA — CSS
+       ======================================================
+       CSS são as "regras visuais" da página.
+       Cada regra tem o formato:
+         .nome-do-elemento {
+           propriedade: valor;
+         }
+
+       As propriedades mais comuns que você vai querer mudar
+       estão marcadas com "✏ EDITE AQUI".
+    ====================================================== */
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+      /* ✏ EDITE AQUI: cor de fundo da página inteira */
+      background: #faf9f7;
+
+      color: #1a1a1a;
+      padding: 2rem 1rem;
+      min-height: 100vh;
+    }
+
+    .wrap {
+      /* largura máxima do conteúdo — aumentar deixa mais largo */
+      max-width: 560px;
+      margin: 0 auto; /* centraliza na página */
+    }
+
+    /* --- Cabeçalho --- */
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .tag {
+      font-size: 11px;
+      letter-spacing: 0.1em;
+
+      /* ✏ EDITE AQUI: cor do texto pequeno acima do título */
+      color: #888;
+
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+
+      /* ✏ EDITE AQUI: cor do título principal */
+      /* color: #D4537E; */
+    }
+
+    .sub {
+      font-size: 14px;
+
+      /* ✏ EDITE AQUI: cor do subtítulo */
+      color: #666;
+    }
+
+    /* --- Barra de progresso --- */
+    .progress-wrap {
+      height: 3px;
+
+      /* ✏ EDITE AQUI: cor de fundo da barra (parte vazia) */
+      background: #eee;
+
+      border-radius: 99px;
+      margin: 1.5rem 0 2rem;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+
+      /* ✏ EDITE AQUI: cor da barra de progresso preenchida */
+      background: #D4537E;
+
+      border-radius: 99px;
+      transition: width 0.4s; /* animação suave ao avançar */
+    }
+
+    /* --- Cartão de cada pista --- */
+    .card {
+      background: #fff;
+
+      /* ✏ EDITE AQUI: borda dos cartões */
+      border: 1px solid #e8e4df;
+
+      /* ✏ EDITE AQUI: arredondamento dos cantos (0 = quadrado, 99px = pill) */
+      border-radius: 12px;
+
+      padding: 1.25rem;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+    }
+
+    /* cartão ativo (selecionado) */
+    .card.active-card {
+      /* ✏ EDITE AQUI: cor da borda quando o cartão está selecionado */
+      border-color: #D4537E;
+      border-width: 1.5px;
+    }
+
+    /* cartão resolvido */
+    .card.solved-card {
+      /* ✏ EDITE AQUI: cor da borda quando a pista foi resolvida */
+      border-color: #1D9E75;
+    }
+
+    .card-num {
+      font-size: 11px;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge-solved {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 99px;
+
+      /* ✏ EDITE AQUI: cor do badge "resolvida" */
+      background: #E1F5EE;
+      color: #085041;
+
+      font-weight: 500;
+    }
+
+    .card-text {
+      font-size: 16px;
+      font-weight: 500;
+      line-height: 1.5;
+      margin-bottom: 0.75rem;
+    }
+
+    /* --- Caixas de letras --- */
+    .boxes {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+      margin-bottom: 0.75rem;
+    }
+
+    .box {
+      /* ✏ EDITE AQUI: tamanho de cada caixa de letra */
+      width: 38px;
+      height: 42px;
+
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      /* ✏ EDITE AQUI: tamanho da letra dentro das caixas */
+      font-size: 17px;
+
+      font-weight: 600;
+      text-transform: uppercase;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    /* caixa com o cursor ativo */
+    .box.cursor {
+      border-color: #D4537E;
+      border-width: 1.5px;
+    }
+
+    /* caixa com resposta correta */
+    .box.ok {
+      border-color: #1D9E75;
+      background: #E1F5EE;
+      color: #085041;
+    }
+
+    /* caixa com resposta errada */
+    .box.err {
+      border-color: #E24B4A;
+      background: #FCEBEB;
+      color: #501313;
+    }
+
+    /* --- Botão de dica --- */
+    .btn-hint {
+      font-size: 12px;
+      border: 1px solid #e8e4df;
+      border-radius: 8px;
+      padding: 5px 12px;
+      background: none;
+      cursor: pointer;
+      color: #666;
+    }
+
+    .btn-hint:hover {
+      background: #f5f5f5;
+    }
+
+    .hint-text {
+      font-size: 13px;
+      color: #666;
+      font-style: italic;
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #f0ece8;
+      display: none; /* fica escondido até clicar em "ver dica" */
+    }
+
+    /* --- Tela final --- */
+    .finish {
+      display: none; /* aparece só quando todas as pistas são resolvidas */
+      text-align: center;
+      padding: 3rem 1rem;
+    }
+
+    .finish h2 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    .finish p {
+      color: #666;
+      font-size: 15px;
+      margin-bottom: 1.5rem;
+    }
+
+    .finish .msg-box {
+      /* ✏ EDITE AQUI: cor de fundo da caixa da mensagem final */
+      background: #fbeaf0;
+      border-radius: 12px;
+      padding: 1.25rem;
+      font-size: 15px;
+      line-height: 1.7;
+
+      /* ✏ EDITE AQUI: cor do texto da mensagem final */
+      color: #4B1528;
+
+      margin-bottom: 1.5rem;
+    }
+
+    .btn-restart {
+      padding: 10px 24px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- ======================================================
+       ② ESTRUTURA — HTML
+       ======================================================
+       HTML são as "caixas" que aparecem na tela.
+       Cada elemento fica entre uma tag de abertura e uma de fechamento:
+         <div class="card"> conteúdo aqui </div>
+
+       ✏ EDITE AQUI: textos visíveis na página
+  ====================================================== -->
+
+  <div class="wrap" id="game">
+
+    <div class="header">
+      <span class="tag">um jogo especial</span>
+
+      <!-- ✏ EDITE AQUI: título principal -->
+      <h1>Feliz aniversário, Elisa!</h1>
+
+      <!-- ✏ EDITE AQUI: subtítulo -->
+      <p class="sub">Resolva as pistas crípticas para revelar a mensagem secreta.</p>
+    </div>
+
+    <!-- barra de progresso — preenchida pelo JavaScript -->
+    <div class="progress-wrap">
+      <div class="progress-fill" id="pbar" style="width: 0%"></div>
+    </div>
+
+    <!-- os cartões de pista são criados automaticamente pelo JavaScript abaixo -->
+    <div id="clues"></div>
+
+  </div>
+
+  <!-- tela final — fica invisível até todas as pistas serem resolvidas -->
+  <div class="finish" id="finish">
+    <div style="font-size: 48px; margin-bottom: 1.5rem">🎂</div>
+    <h2>Você resolveu tudo!</h2>
+
+    <!-- ✏ EDITE AQUI: mensagem exibida ao completar o jogo -->
+    <p>Você é incrível — feliz aniversário!</p>
+
+    <div class="msg-box" id="fin-msg"></div>
+    <button class="btn-restart" onclick="restart()">Jogar de novo</button>
+  </div>
+
+  <!-- campo invisível que captura as teclas digitadas -->
+  <input id="hi" style="position:absolute;opacity:0;width:1px;height:1px"
+    autocomplete="off" autocorrect="off" autocapitalize="off">
+
+
+  <script>
+
+    /* ======================================================
+       ③ COMPORTAMENTO — JavaScript
+       ======================================================
+       O JavaScript faz o jogo funcionar.
+       Você raramente precisa editar esta parte —
+       o que importa mesmo são as PISTAS abaixo.
+
+       ✏ EDITE AQUI: adicione, remova ou altere pistas
+    ====================================================== */
+
+    const CLUES = [
+      /* Cada pista tem três campos:
+         clue   → o texto da pista que aparece na tela
+         answer → a resposta (sempre MAIÚSCULA, sem acento)
+         hint   → dica opcional que aparece ao clicar "ver dica"
+
+         Para adicionar uma pista: copie um bloco { ... },
+         cole depois da última vírgula e preencha os campos.
+
+         Para remover: apague o bloco inteiro { ... }, incluindo a vírgula.
+      */
+      {
+        clue: "Anagrama de TARS — o que você é pra quem te ama. (4)",
+        answer: "STAR",
+        hint: "Misture as letras de TARS."
+      },
+      {
+        clue: "Anagrama de EALIS — um nome muito especial. (5)",
+        answer: "ELISA",
+        hint: "É o seu próprio nome com as letras trocadas de lugar!"
+      },
+      {
+        clue: "Anagrama de HOBRIL — o que você sempre espalha por onde passa. (6)",
+        answer: "BRILHO",
+        hint: "Pense em luz intensa. HOBRIL embaralhado."
+      },
+      {
+        clue: "Anagrama de GAIAELR — sinônimo de festa e contentamento. (7)",
+        answer: "ALEGRIA",
+        hint: "Rima com Maria! Embaralhe GAIAELR."
+      },
+      {
+        clue: "Iniciais de: Amor Nunca Olvida — o que você carrega dentro de você. (3)",
+        answer: "ANO",
+        hint: "Só a primeira letra de cada palavra: Amor, Nunca, Olvida."
+      }
+    ];
+
+    /* ======================================================
+       A partir daqui é o motor do jogo.
+       Não precisa editar — mas os comentários explicam
+       o que cada parte faz, caso tenha curiosidade.
+    ====================================================== */
+
+    let solved, inputs, hints, active;
+
+    function init() {
+      solved = CLUES.map(() => false);           // marca todas como não resolvidas
+      inputs = CLUES.map(c => Array(c.answer.length).fill('')); // caixas vazias
+      hints  = CLUES.map(() => false);           // dicas escondidas
+      active = 0;                                // começa na primeira pista
+      render();
+    }
+
+    function render() {
+      const el = document.getElementById('clues');
+      el.innerHTML = '';
+
+      CLUES.forEach((c, i) => {
+        const d = document.createElement('div');
+        const isActive = active === i && !solved[i];
+        d.className = 'card' + (solved[i] ? ' solved-card' : isActive ? ' active-card' : '');
+
+        const cur = getCursor(i);
+
+        // monta as caixas de letra
+        let bxs = '';
+        for (let j = 0; j < c.answer.length; j++) {
+          let cls = 'box';
+          if (solved[i]) cls += ' ok';
+          else if (isActive && j === cur) cls += ' cursor';
+          bxs += `<div class="${cls}" id="b${i}_${j}">${solved[i] ? c.answer[j] : inputs[i][j] || ''}</div>`;
+        }
+
+        const badge   = solved[i] ? '<span class="badge-solved">resolvida</span>' : '';
+        const hintBtn = solved[i] ? '' : `<button class="btn-hint" onclick="toggleHint(event,${i})">${hints[i] ? 'ocultar dica' : 'ver dica'}</button>`;
+        const hintTxt = `<div class="hint-text" id="ht${i}" style="display:${hints[i] ? 'block' : 'none'}">${c.hint}</div>`;
+
+        d.innerHTML = `
+          <div class="card-num">Pista ${i + 1} ${badge}</div>
+          <div class="card-text">${c.clue}</div>
+          <div class="boxes">${bxs}</div>
+          ${hintBtn}
+          ${hintTxt}
+        `;
+
+        if (!solved[i]) d.addEventListener('click', () => activate(i));
+        el.appendChild(d);
+      });
+
+      // atualiza a barra de progresso
+      const pct = solved.filter(Boolean).length / CLUES.length * 100;
+      document.getElementById('pbar').style.width = pct + '%';
+
+      focus();
+    }
+
+    // retorna a posição da próxima caixa vazia
+    function getCursor(i) {
+      for (let j = 0; j < inputs[i].length; j++) {
+        if (!inputs[i][j]) return j;
+      }
+      return inputs[i].length - 1;
+    }
+
+    function activate(i) {
+      if (solved[i]) return;
+      active = i;
+      render();
+    }
+
+    // mantém o foco no campo invisível para capturar teclas
+    function focus() {
+      const h = document.getElementById('hi');
+      h.value = '';
+      h.focus();
+    }
+
+    function toggleHint(e, i) {
+      e.stopPropagation();
+      hints[i] = !hints[i];
+      document.getElementById('ht' + i).style.display = hints[i] ? 'block' : 'none';
+      e.target.textContent = hints[i] ? 'ocultar dica' : 'ver dica';
+    }
+
+    // captura o que o jogador digita
+    document.getElementById('hi').addEventListener('keydown', e => {
+      const i = active;
+      if (solved[i]) return;
+
+      if (e.key === 'Backspace') {
+        e.preventDefault();
+        const c = getCursor(i);
+        if (inputs[i][c]) inputs[i][c] = '';
+        else if (c > 0) inputs[i][c - 1] = '';
+        updateBoxes(i);
+        return;
+      }
+
+      if (/^[a-zA-ZÀ-ÿ]$/.test(e.key)) {
+        e.preventDefault();
+        const c = getCursor(i);
+        if (c < CLUES[i].answer.length) {
+          inputs[i][c] = e.key.toUpperCase();
+          updateBoxes(i);
+          if (getCursor(i) === CLUES[i].answer.length) checkAnswer(i);
+        }
+      }
+    });
+
+    function updateBoxes(i) {
+      const cur = getCursor(i);
+      for (let j = 0; j < CLUES[i].answer.length; j++) {
+        const b = document.getElementById('b' + i + '_' + j);
+        if (!b) return;
+        b.textContent = inputs[i][j] || '';
+        b.className = 'box' + (active === i && j === cur ? ' cursor' : '');
+      }
+    }
+
+    function checkAnswer(i) {
+      const ans = inputs[i].join('');
+      if (ans === CLUES[i].answer) {
+        // resposta correta
+        solved[i] = true;
+        for (let j = 0; j < CLUES[i].answer.length; j++) {
+          const b = document.getElementById('b' + i + '_' + j);
+          if (b) { b.textContent = CLUES[i].answer[j]; b.className = 'box ok'; }
+        }
+        setTimeout(() => {
+          if (solved.every(Boolean)) {
+            showFinish();
+          } else {
+            render();
+            const next = solved.findIndex((v, x) => !v && x > i);
+            activate(next >= 0 ? next : solved.findIndex(v => !v));
+          }
+        }, 600);
+      } else {
+        // resposta errada — pisca vermelho e limpa
+        for (let j = 0; j < CLUES[i].answer.length; j++) {
+          const b = document.getElementById('b' + i + '_' + j);
+          if (b) b.className = 'box err';
+        }
+        setTimeout(() => {
+          inputs[i] = Array(CLUES[i].answer.length).fill('');
+          updateBoxes(i);
+        }, 800);
+      }
+    }
+
+    function showFinish() {
+      document.getElementById('game').style.display = 'none';
+      document.getElementById('finish').style.display = 'block';
+      // mostra as respostas como mensagem
+      document.getElementById('fin-msg').textContent = CLUES.map(c => c.answer).join(' · ');
+    }
+
+    function restart() {
+      document.getElementById('finish').style.display = 'none';
+      document.getElementById('game').style.display = 'block';
+      init();
+    }
+
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.card')) focus();
+    });
+
+    // inicia o jogo
+    init();
+
+  </script>
+</body>
+</html>

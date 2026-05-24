@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feliz aniversário, Elisa!</title>
+<style>
+
+  :root {
+    --pink: #F5C8E8;
+    --pink-dark: #c9649a;
+    --blue: #ADD3FF;
+    --blue-dark: #1d4d8a;
+    --blue-light: #edf4ff;
+    --yellow: #FFF2B1;
+    --black: #1E1E1E;
+    --bg: #e8f1ff;
+    --white: #ffffff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: linear-gradient(180deg, var(--blue-light) 0%, var(--bg) 100%);
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .header {
+    background: var(--blue-dark);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    color: var(--white);
+    flex-shrink: 0;
+    z-index: 10;
+  }
+  .header-title { font-size: 15px; font-weight: 800; color: var(--white); }
+  .header-sub   { font-size: 11px; color: rgba(255,255,255,0.75); }
+  .header-counter {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.95);
+    font-weight: 700;
+    text-align: right;
+    min-width: 90px;
+  }
+  .hint-dot-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 4px;
+    width: 100%;
+  }
+  .hint-dot {
+    width: 11px; height: 11px;
+    border: 1.5px solid #999;
+    border-radius: 50%;
+    background: #fff;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .hint-dot.used {
+    background: var(--pink);
+    border-color: var(--pink-dark);
+  }
+  .hint-counter-label {
+    font-size: 10px;
+    color: #444;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+  }
+  .scribble-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .scribble-meta span {
+    font-size: 14px;
+    font-weight: 700;
+    color: #222;
+  }
+  .scribble-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .game-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    max-width: 580px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 16px 110px;
+    min-height: 0;
+  }
+
+  #main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding-top: 16px;
+    min-height: 0;
+  }
+
+  #scribble-content {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 10px;
+    min-height: 0;
+  }
+  #scribble-content.open { display: flex; }
+
+  .clue-box {
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    background: var(--white);
+    border: 3px solid var(--black);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 3px 3px 0px 0px var(--black);
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.5;
+    min-height: 80px;
+    display: block;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+
+  .letter-grid { display: flex; gap: 6px; margin: 0 auto; }
+  .letter-grid button { min-width: 46px; }
+
+  .clue-box .highlight-indicator  { background: var(--blue);   border-radius: 3px; padding: 0 2px; }
+  .clue-box .highlight-fodder     { background: var(--pink);   border-radius: 3px; padding: 0 2px; }
+  .clue-box .highlight-definition { background: var(--yellow); border-radius: 3px; padding: 0 2px; }
+
+  .letter-tile {
+    width: 46px; height: 46px;
+    border: 3px solid var(--black);
+    background: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer; outline: none;
+  }
+  .letter-tile:first-child { border-radius: 8px 0 0 8px; }
+  .letter-tile:last-child  { border-radius: 0 8px 8px 0; }
+  .letter-tile.active  { background: var(--pink); }
+  .letter-tile.correct { background: #b8f0d8; border-color: #1a7a4a; }
+  .letter-tile.wrong   { background: #ffc8c8; border-color: #c0392b; }
+  .letter-tile.hinted  { background: var(--yellow); border-color: #c8a000; }
+
+  .progress-wrap { width: 100%; height: 4px; background: #ccc; border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--pink-dark); border-radius: 99px; transition: width 0.4s; }
+
+  .action-bar {
+    position: fixed;
+    left: 50%;
+    bottom: 14px;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--white);
+    border: 3px solid var(--black);
+    border-radius: 999px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+    max-width: min(100%, 560px);
+    width: calc(100% - 32px);
+    z-index: 20;
+    flex-shrink: 0;
+  }
+
+  .btn-round {
+    width: 46px; height: 46px;
+    border: 3px solid var(--black);
+    border-radius: 50%;
+    background: var(--blue);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    box-shadow: 3px 3px 0 var(--black);
+    transition: transform 0.15s, box-shadow 0.15s;
+    flex-shrink: 0;
+  }
+  .btn-round:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--black); }
+
+  .btn-pill {
+    height: 44px; padding: 0 24px;
+    border: 3px solid var(--black);
+    border-radius: 99px;
+    font-size: 16px; font-weight: 700;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 var(--black);
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s;
+  }
+  .btn-pill:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--black); }
+  .btn-pill:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
+  .btn-pill.yellow { background: var(--yellow); }
+  .btn-pill.pink   { background: var(--pink); }
+  .btn-pill.white  { background: var(--white); }
+
+  .keyboard {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .kb-row { display: flex; gap: 5px; justify-content: center; }
+  .kb-key {
+    flex: 1; max-width: 38px; height: 44px;
+    border: 2px solid var(--black);
+    border-radius: 6px;
+    background: var(--white);
+    font-size: 15px; font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 2px 2px 0 var(--black);
+    transition: transform 0.1s, box-shadow 0.1s;
+    user-select: none;
+  }
+  .kb-key:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 var(--black); }
+  .kb-key.bksp { max-width: 52px; font-size: 18px; }
+
+  .scribble-header {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .scribble-title {
+    font-size: 14px; font-weight: 800;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .scribble-icon {
+    width: 32px; height: 32px;
+    background: var(--blue);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .scribble-layout-toggle {
+    display: flex; gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .scribble-layout-btn {
+    border: 2px solid var(--black);
+    border-radius: 999px;
+    background: var(--white);
+    color: var(--black);
+    padding: 8px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 var(--black);
+    transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+  }
+  .scribble-layout-btn:hover { transform: translateY(-1px); }
+  .scribble-layout-btn.active {
+    background: var(--blue);
+    color: var(--white);
+    border-color: var(--blue-dark);
+  }
+  .btn-close {
+    background: none; border: none; cursor: pointer;
+    font-size: 24px; line-height: 1; padding: 4px;
+    border-radius: 50%;
+  }
+  .btn-close:hover { background: #f0f0f0; }
+
+  .scribble-clue {
+    font-size: 16px; font-weight: 600; line-height: 1.5;
+    padding: 6px 0;
+    border-bottom: 1px solid #ddd;
+    flex-shrink: 0;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  .scribble-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
+    gap: 8px;
+    margin: 10px 0 0;
+    width: 100%;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .scribble-row.over {
+    background: rgba(173, 211, 255, 0.18);
+    border-radius: 14px;
+    padding: 6px;
+  }
+  .scribble-cell {
+    min-height: 50px;
+    border: 3px solid var(--black);
+    border-radius: 12px;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+  .scribble-cell.hinted { background: var(--yellow); }
+  .scribble-cell.active { background: var(--pink); }
+
+  .scribble-tiles-area {
+    flex: 1;
+    position: relative;
+    width: 100%;
+    min-height: 80px;
+    background: #f9f9f9;
+    border: 2px dashed #ccc;
+    border-radius: 10px;
+    overflow: hidden;
+    touch-action: none;
+  }
+
+  .scribble-tile {
+    position: absolute;
+    width: 46px; height: 46px;
+    border: 3px solid var(--black);
+    border-radius: 8px;
+    background: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; font-weight: 700;
+    text-transform: uppercase;
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+    transition: box-shadow 0.1s;
+  }
+  .scribble-tile:active, .scribble-tile.dragging {
+    cursor: grabbing;
+    box-shadow: 4px 4px 0 var(--black);
+    z-index: 10;
+    background: var(--pink);
+  }
+
+  .scribble-controls {
+    display: flex; gap: 8px; justify-content: center;
+    flex-shrink: 0; padding: 4px 0;
+  }
+  .btn-shuffle {
+    padding: 8px 20px;
+    border: 2px solid var(--black);
+    border-radius: 99px;
+    background: var(--blue);
+    font-size: 14px; font-weight: 700;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 var(--black);
+  }
+  .btn-shuffle:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 var(--black); }
+
+  .hints-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0, 0, 0, 0.25);
+    z-index: 200;
+    align-items: flex-end; justify-content: center;
+  }
+  .hints-overlay.open { display: flex; }
+
+  .hints-modal {
+    width: 100%; max-width: 560px;
+    background: var(--white);
+    border: 3px solid var(--black);
+    border-radius: 16px 16px 0 0;
+    padding: 16px 20px 36px;
+    animation: slideUp 0.25s ease-out;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+
+  .hints-modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .hints-modal-title { font-size: 13px; font-weight: 600; color: #888; letter-spacing: .03em; }
+
+  .hint-option {
+    display: flex; flex-direction: column; align-items: stretch;
+    gap: 6px;
+    width: 100%;
+    padding: 14px 0;
+    border: none; background: none;
+    text-align: left;
+    cursor: pointer; color: var(--black);
+    transition: opacity 0.15s;
+  }
+  .hint-tip {
+    background: #f8f8f8;
+    border: 1px solid #e1e1e1;
+    border-radius: 999px;
+    color: #444;
+    font-size: 12px;
+    line-height: 1.4;
+    padding: 6px 10px;
+    margin: 6px 0 0 28px;
+    max-width: calc(100% - 28px);
+  }
+  .hint-option:hover:not(:disabled) .hint-bar { transform: scaleX(1.04); }
+  .hint-option:disabled { opacity: 0.35; cursor: default; }
+  .hint-option:disabled .hint-bar { display: none; }
+
+  .hint-label { position: relative; display: inline-block; }
+  .hint-bar {
+    position: absolute; left: 0; right: 0;
+    height: 8px; bottom: 2px;
+    border-radius: 3px; z-index: 0;
+    transition: transform 0.2s ease;
+    transform-origin: left center;
+  }
+  .hint-text { position: relative; z-index: 1; font-size: 20px; font-weight: 800; padding: 0 4px; }
+  .hint-separator { border-top: 2px solid #eee; margin: 4px 0; }
+
+  .finish {
+    display: none;
+    text-align: center;
+    padding: 3rem 1rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+  .finish.open { display: flex; }
+  .finish h2 { font-size: 24px; font-weight: 800; }
+  .finish .msg-box {
+    background: var(--pink);
+    border: 3px solid var(--black);
+    border-radius: 12px;
+    box-shadow: 3px 3px 0 var(--black);
+    padding: 1rem 1.25rem;
+    font-size: 15px; line-height: 1.7;
+    max-width: 400px; width: 100%;
+  }
+
+  #hi { position: absolute; opacity: 0; width: 1px; height: 1px; top: -99px; }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    15%  { transform: translateX(-7px); }
+    30%  { transform: translateX(7px); }
+    45%  { transform: translateX(-5px); }
+    60%  { transform: translateX(5px); }
+    75%  { transform: translateX(-2px); }
+    90%  { transform: translateX(2px); }
+  }
+  .shake { animation: shake 0.45s ease-in-out; }
+
+  @keyframes scaleIn {
+    0%   { opacity: 0.4; transform: scale(0.8); }
+    60%  { transform: scale(1.08); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  .scale-in { animation: scaleIn 0.35s ease-out forwards; }
+
+  .trash-zone {
+    position: absolute;
+    bottom: 8px; right: 8px;
+    width: 46px; height: 46px;
+    border: 2px dashed #ccc;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    color: #ccc;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+    pointer-events: none;
+    z-index: 1;
+    user-select: none;
+  }
+  .trash-zone.over {
+    background: #ffc8c8;
+    border-color: #c0392b;
+    border-style: solid;
+    color: #c0392b;
+  }
+
+  /* progress dots */
+  .progress-dots { display: flex; gap: 6px; align-items: center; }
+  .progress-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: #ccc;
+    border: 2px solid #aaa;
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .progress-dot.active  { background: #f8d0ec; border-color: var(--pink-dark); }
+  .progress-dot.solved  { background: var(--pink-dark); border-color: var(--pink-dark); }
+  .progress-dot.par     { background: #4caf50; border-color: #2e7d32; }
+  .progress-dot { cursor: pointer; }
+
+  .reset-button {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    border: 3px solid var(--blue);
+    background: var(--blue);
+    box-shadow: 0 2px 0 rgba(0,0,0,0.12);
+    cursor: pointer;
+    z-index: 50;
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    opacity: 0.95;
+  }
+  .reset-button:hover { transform: translateY(-1px); opacity: 1; }
+  .reset-button:active { transform: translate(1px,1px); box-shadow: 0 1px 0 rgba(0,0,0,0.12); }
+
+  /* attempt dots */
+  .attempt-dots { display: flex; gap: 5px; justify-content: center; min-height: 16px; padding: 2px 0; }
+  .attempt-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #ffc8c8;
+    border: 2px solid #c0392b;
+  }
+
+  /* hint summary */
+  @keyframes cardSlideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+  .hint-summary {
+    display: none;
+    width: 100%;
+    background: var(--white);
+    border: 2px solid var(--black);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .hint-summary.visible { display: block; animation: cardSlideUp 0.3s ease-out; }
+  .hint-summary-title { font-weight: 700; font-size: 11px; color: #888; letter-spacing: .06em; margin-bottom: 4px; }
+
+  /* finish card */
+  .finish-card {
+    background: var(--white);
+    border: 3px solid var(--black);
+    border-radius: 16px;
+    box-shadow: 4px 4px 0 var(--black);
+    padding: 1.25rem 1.5rem;
+    width: 100%; max-width: 400px;
+    animation: cardSlideUp 0.4s ease-out;
+    text-align: center;
+  }
+  .finish-stats { font-size: 14px; color: #555; margin: 0 0 14px; line-height: 1.8; }
+  .btn-share {
+    height: 44px; padding: 0 24px;
+    border: 3px solid var(--black);
+    border-radius: 99px;
+    font-size: 16px; font-weight: 700;
+    background: var(--blue);
+    cursor: pointer;
+    box-shadow: 3px 3px 0 var(--black);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .btn-share:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--black); }
+
+
+
+  /* Atualização inspirada no DOM/fluxo do Minute Cryptic */
+  :root {
+    --pink: #F5D1FD;
+    --pink-dark: #A948B8;
+    --blue: #ADD3FF;
+    --blue-dark: #8FC2F2;
+    --blue-light: #DCEEFF;
+    --yellow: #FFF2B1;
+    --card: #FFFFFF;
+    --light-gray: #F4F5F6;
+    --off-white: #FAFAF6;
+  }
+
+  body {
+    background: var(--blue-dark);
+    color: var(--black);
+  }
+
+  .header {
+    position: sticky;
+    top: 0;
+    min-height: 54px;
+    background: var(--blue-dark);
+    color: var(--black);
+    border-bottom: 0;
+    padding: 8px 16px;
+  }
+  .header-title { color: var(--black); font-size: 16px; }
+  .header-sub { color: rgba(0,0,0,.72); font-size: 12px; }
+  .header-actions { display: flex; align-items: center; gap: 14px; }
+  .header-icon {
+    width: 36px; height: 36px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 0; background: transparent; cursor: pointer;
+    color: var(--black); font-size: 24px; font-weight: 900;
+    transition: transform .15s, opacity .15s;
+  }
+  .header-icon:active { transform: scale(.92); opacity: .65; }
+  .brand-mark {
+    width: 32px; height: 32px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 3px solid var(--black);
+    border-radius: 9px;
+    background: var(--pink);
+    box-shadow: 3px 3px 0 var(--white);
+    font-family: Georgia, serif;
+    font-weight: 900;
+  }
+  .header-counter { color: var(--black); min-width: 88px; }
+  .hint-counter-label { color: rgba(0,0,0,.72); }
+
+  .game-area {
+    max-width: 612px;
+    padding: 10px 16px 132px;
+  }
+  #main-content { gap: 34px; padding-top: 8px; }
+
+  .clue-box {
+    border: 0;
+    border-radius: 10px;
+    box-shadow: none;
+    min-height: 96px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 400;
+    line-height: 1.35;
+  }
+  .letter-grid { gap: 0; width: 100%; justify-content: center; }
+  .letter-tile {
+    outline: 4px solid var(--black);
+    outline-offset: -2px;
+    border: 0;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 36px;
+    max-width: 46px;
+    max-height: 46px;
+    flex: 1;
+  }
+  .letter-tile.active { background: var(--pink); }
+  .letter-tile:first-child { border-radius: 7px 0 0 7px; }
+  .letter-tile:last-child { border-radius: 0 7px 7px 0; }
+
+  .action-bar {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    bottom: 104px;
+    justify-content: center;
+    gap: 16px;
+    padding: 0;
+    pointer-events: none;
+  }
+  .action-bar button { pointer-events: auto; }
+  .btn-round, .btn-pill {
+    min-height: 48px;
+    border: 3px solid var(--black);
+    box-shadow: 3px 3px 0 var(--black);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-weight: 800;
+  }
+  .btn-round { width: 48px; height: 48px; background: var(--blue); }
+  .btn-pill { height: 48px; padding: 0 32px; font-size: 20px; }
+  .btn-pill.white { background: var(--white); }
+  .btn-pill.yellow { background: var(--yellow); }
+  .btn-pill.pink { background: var(--pink); }
+  #btn-clear { display: none; }
+
+  .keyboard {
+    position: fixed;
+    left: 50%; bottom: 8px;
+    transform: translateX(-50%);
+    max-width: 612px;
+    width: calc(100% - 10px);
+    padding: 0 0 2px;
+    z-index: 18;
+  }
+  .kb-row { gap: 6px; }
+  .kb-key {
+    max-width: none;
+    height: 46px;
+    border: 0;
+    border-radius: 7px;
+    background: var(--off-white);
+    box-shadow: none;
+    font-weight: 800;
+  }
+  .kb-key.bksp { max-width: 58px; }
+
+  #scribble-content.open {
+    position: fixed;
+    z-index: 50;
+    inset: 56px max(16px, calc((100vw - 612px)/2)) 16px max(16px, calc((100vw - 612px)/2));
+    background: var(--white);
+    border-radius: 10px;
+    box-shadow: 0 16px 44px rgba(0,0,0,.22);
+    padding: 0;
+    overflow: hidden;
+  }
+  #scribble-content.open::before {
+    content: '';
+    position: fixed;
+    inset: 54px 0 0;
+    z-index: -1;
+    background: rgba(0,0,0,.06);
+  }
+  .scribble-header {
+    min-height: 60px;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(0,0,0,.07);
+  }
+  .scribble-title { font-size: 14px; line-height: .95; }
+  .scribble-icon { background: var(--blue); }
+  .scribble-layout-toggle {
+    background: var(--light-gray);
+    border-radius: 999px;
+    padding: 4px;
+    gap: 2px;
+  }
+  .scribble-layout-btn {
+    width: 32px; height: 32px;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+    border-radius: 999px;
+    font-size: 0;
+    position: relative;
+  }
+  .scribble-layout-btn:first-child::after { content: '▦'; font-size: 19px; }
+  .scribble-layout-btn:last-child::after { content: '○'; font-size: 21px; }
+  .scribble-layout-btn.active { background: var(--white); color: var(--black); box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+  .scribble-meta { padding: 0 16px; }
+  .scribble-clue {
+    padding: 10px 16px;
+    min-height: 84px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 400;
+    border-bottom: 0;
+  }
+  .scribble-row {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    padding: 6px 16px 12px;
+    margin: 0;
+  }
+  .scribble-cell {
+    width: 46px;
+    min-height: 46px;
+    max-width: 46px;
+    border: 0;
+    outline: 4px solid var(--black);
+    outline-offset: -2px;
+    border-radius: 0;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 32px;
+  }
+  .scribble-cell:first-child { border-radius: 7px 0 0 7px; }
+  .scribble-cell:last-child { border-radius: 0 7px 7px 0; }
+  .scribble-tiles-area {
+    flex: 1;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: var(--white);
+  }
+  .scribble-tile {
+    border: 0;
+    outline: 4px solid var(--black);
+    outline-offset: -2px;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 36px;
+  }
+  .scribble-controls {
+    padding: 10px 16px 16px;
+    background: var(--white);
+  }
+
+  .start-overlay, .how-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    background: var(--blue-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+  }
+  .start-overlay.hidden, .how-overlay.hidden { display: none; }
+  .start-card, .how-card {
+    width: min(100%, 520px);
+    background: var(--white);
+    border: 4px solid var(--black);
+    border-radius: 18px;
+    box-shadow: 4px 4px 0 var(--black);
+    padding: 26px;
+    text-align: center;
+  }
+  .start-card h1, .how-card h2 {
+    font-size: 28px;
+    line-height: 1.15;
+    margin-bottom: 14px;
+  }
+  .start-card p, .how-card p {
+    font-size: 18px;
+    line-height: 1.45;
+    margin-bottom: 18px;
+  }
+  .how-list {
+    text-align: left;
+    display: grid;
+    gap: 12px;
+    margin: 18px 0;
+    line-height: 1.45;
+  }
+
+  @media (max-height: 720px) {
+    #main-content { gap: 22px; }
+    .clue-box { min-height: 80px; font-size: 20px; }
+    .action-bar { bottom: 94px; }
+    .kb-key { height: 40px; }
+  }
+
+</style>
+</head>
+<body>
+
+  <div class="start-overlay" id="start-overlay">
+    <div class="start-card">
+      <div style="font-size:54px;margin-bottom:8px">🎁</div>
+      <h1>Jogo críptico da Elisa</h1>
+      <p>Resolva as pistas para abrir o presente final.</p>
+      <button class="btn-pill pink" type="button" onclick="startGame()">play</button>
+    </div>
+  </div>
+
+  <div class="how-overlay hidden" id="how-overlay" onclick="closeHowToIfOutside(event)">
+    <div class="how-card">
+      <h2>Como jogar</h2>
+      <div class="how-list">
+        <p><strong>1.</strong> Leia a pista e preencha as letras da resposta.</p>
+        <p><strong>2.</strong> Use <strong>dicas</strong> para destacar definição, material da resposta ou indicador.</p>
+        <p><strong>3.</strong> Abra o <strong>Scribble Space</strong> para testar letras, embaralhar e montar a palavra.</p>
+        <p><strong>4.</strong> Toque em <strong>verificar</strong> para confirmar.</p>
+      </div>
+      <button class="btn-pill yellow" type="button" onclick="closeHowTo()">fechar</button>
+    </div>
+  </div>
+
+  <div class="header">
+    <div class="header-actions">
+      <button class="header-icon" type="button" onclick="restart()" aria-label="Recomeçar">←</button>
+      <div>
+        <div class="header-title">Feliz aniversário, Elisa!</div>
+        <div class="header-sub">Um criptograma só seu</div>
+      </div>
+    </div>
+    <div class="header-counter" id="clue-counter">
+      <div class="hint-dot-row" id="hint-dot-row"></div>
+      <div class="hint-counter-label" id="hint-counter-label">PAR</div>
+    </div>
+    <div class="header-actions">
+      <button class="header-icon" type="button" onclick="openHowTo()" aria-label="Como jogar">ⓘ</button>
+      <div class="brand-mark">m</div>
+    </div>
+    <div class="progress-dots" id="progress-dots"></div>
+  </div>
+
+  <div class="game-area" id="game">
+
+    <div id="main-content">
+      <div class="clue-box" id="clue-box"></div>
+      <div class="letter-grid" id="letter-grid"></div>
+      <div class="attempt-dots" id="attempt-dots"></div>
+      <div class="hint-summary" id="hint-summary">
+        <div class="hint-summary-title">RESUMO DA PISTA</div>
+        <div id="hint-summary-body"></div>
+      </div>
+    </div>
+
+    <div id="scribble-content">
+      <div class="scribble-header">
+        <div class="scribble-title">
+          <div class="scribble-icon">✏️</div>
+          <div>Scribble<br>Space</div>
+        </div>
+        <div class="scribble-layout-toggle">
+          <button class="scribble-layout-btn" onclick="setScribbleLayout('grid')">Grid layout</button>
+          <button class="scribble-layout-btn" onclick="setScribbleLayout('circle')">Circle layout</button>
+        </div>
+        <button class="btn-close" onclick="closeScribble()" aria-label="Fechar">✕</button>
+      </div>
+      <div class="scribble-meta">
+        <span id="scribble-letter-count"></span>
+      </div>
+      <div class="scribble-clue" id="scribble-clue"></div>
+      <div class="scribble-row" id="scribble-row"></div>
+      <div class="scribble-tiles-area" id="tiles-area">
+        <div class="trash-zone" id="trash-zone">🗑️</div>
+      </div>
+      <div class="scribble-controls">
+        <button class="btn-pill white" onclick="shuffleTiles()">↺ embaralhar</button>
+        <button class="btn-pill white" onclick="resetTilePositions()">⊞ reorganizar</button>
+      </div>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn-round" id="btn-scribble" aria-label="Abrir scribble space" title="Scribble Space">✏️</button>
+      <button class="btn-pill yellow" id="btn-hints" onclick="openHintsModal()">dicas</button>
+      <button class="btn-pill white" id="btn-clear" onclick="clearCurrentInput()">limpar</button>
+      <button class="btn-pill white" id="btn-check" onclick="checkAnswer()" disabled>verificar</button>
+    </div>
+
+    <div class="keyboard" id="keyboard">
+      <div class="kb-row" id="kb-row-0"></div>
+      <div class="kb-row" id="kb-row-1"></div>
+      <div class="kb-row" id="kb-row-2"></div>
+    </div>
+
+  </div>
+
+  <button id="btn-reset" class="reset-button" onclick="restart()" aria-label="Reiniciar o jogo"></button>
+
+  <div class="finish" id="finish">
+    <div style="font-size:56px">🎂</div>
+    <h2>Você resolveu tudo!</h2>
+    <p style="color:#555">Feliz aniversário, Elisa!</p>
+    <div class="finish-card" id="finish-card">
+      <div class="finish-stats" id="finish-stats"></div>
+      <button class="btn-share" onclick="shareResult()">📋 compartilhar</button>
+    </div>
+    <button class="btn-pill pink" style="margin-top:8px" onclick="restart()">jogar de novo</button>
+  </div>
+
+  <div class="hints-overlay" id="hints-overlay" onclick="closeHintsIfOutside(event)">
+    <div class="hints-modal">
+      <div class="hints-modal-header">
+        <span class="hints-modal-title">Selecione uma dica</span>
+        <button class="btn-close" onclick="closeHintsModal()" aria-label="Fechar">✕</button>
+      </div>
+      <div id="hints-list"></div>
+    </div>
+  </div>
+
+  <input id="hi" autocomplete="off" autocorrect="off" autocapitalize="off">
+
+  <script>
+
+    const CLUES = [
+      {
+        clue: "Para animar o Cérbero sem bola, dê-lhe um lar agitado! (8)",
+        answer: "CELEBRAR",
+        hints: { indicators: ["sem bola","dê-lhe","agitado"], fodder: ["cerbero","lar"], definition: ["animar"] }
+      }
+    ];
+
+    let solved, inputs, active, activeCell, hintsRevealed, letterRevealed, scribbleState, scribbleLayout, wrongAttempts;
+
+    function init() {
+      const saved = loadGameState();
+      if (saved && Array.isArray(saved.solved) && saved.solved.length === CLUES.length) {
+        solved         = saved.solved;
+        inputs         = saved.inputs;
+        active         = saved.active || 0;
+        activeCell     = saved.activeCell === undefined ? null : saved.activeCell;
+        hintsRevealed  = saved.hintsRevealed;
+        letterRevealed = saved.letterRevealed;
+        scribbleState  = saved.scribbleState;
+        scribbleLayout = saved.scribbleLayout || 'grid';
+        wrongAttempts  = saved.wrongAttempts;
+      } else {
+        solved         = CLUES.map(() => false);
+        inputs         = CLUES.map(c => Array(c.answer.length).fill(''));
+        active         = 0;
+        activeCell     = null;
+        hintsRevealed  = CLUES.map(() => ({ indicators: false, fodder: false, definition: false, letter: false }));
+        letterRevealed = CLUES.map(() => []);
+        scribbleState  = CLUES.map(() => null);
+        scribbleLayout = 'grid';
+        wrongAttempts  = CLUES.map(() => 0);
+      }
+      closeScribble();
+      hideHintSummary();
+      renderClue();
+      renderGrid();
+      buildKeyboard();
+      updateProgress();
+      updateClueCounter();
+      focusHidden();
+    }
+
+    function renderClue() {
+      const c = CLUES[active];
+      const hr = hintsRevealed[active];
+      let text = escapeHtml(c.clue);
+      if (hr.indicators) (c.hints.indicators || []).forEach(w => { text = text.replace(new RegExp(escapeRegex(w), 'g'), '<span class="highlight-indicator">' + w + '</span>'); });
+      if (hr.fodder)     (c.hints.fodder     || []).forEach(w => { text = text.replace(new RegExp(escapeRegex(w), 'g'), '<span class="highlight-fodder">'     + w + '</span>'); });
+      if (hr.definition) (c.hints.definition || []).forEach(w => { text = text.replace(new RegExp(escapeRegex(w), 'g'), '<span class="highlight-definition">' + w + '</span>'); });
+      document.getElementById('clue-box').innerHTML = text;
+      document.getElementById('scribble-clue').innerHTML = text;
+      fitClueText();
+    }
+
+    function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+
+    function nextEditableIndex(start = 0) {
+      const len = inputs[active].length;
+      for (let j = start; j < len; j++) {
+        if (!letterRevealed[active].includes(j)) return j;
+      }
+      for (let j = 0; j < len; j++) {
+        if (!letterRevealed[active].includes(j)) return j;
+      }
+      return len - 1;
+    }
+
+    function getCursor() {
+      if (activeCell !== null && activeCell >= 0 && activeCell < inputs[active].length) {
+        return activeCell;
+      }
+      return nextEditableIndex(0);
+    }
+
+    function selectCell(index) {
+      if (solved[active]) return;
+      activeCell = index;
+      renderGrid();
+      focusHidden();
+    }
+
+    function updateClueCounter() {
+      const dotsEl = document.getElementById('hint-dot-row');
+      const labelEl = document.getElementById('hint-counter-label');
+      if (!dotsEl || !labelEl) return;
+      const hr = hintsRevealed[active];
+      const letterCount = letterRevealed[active].length;
+      const used = (hr.indicators ? 1 : 0) + (hr.fodder ? 1 : 0) + (hr.definition ? 1 : 0) + letterCount;
+      const total = CLUES[active].answer.length + 3;
+      dotsEl.innerHTML = Array.from({ length: total }, (_, i) =>
+        `<span class="hint-dot${i < used ? ' used' : ''}"></span>`
+      ).join('');
+      labelEl.textContent = used === 0 ? 'PAR' : `Dicas ${used} / ${total}`;
+    }
+
+    function saveGameState() {
+      const state = {
+        solved,
+        inputs,
+        active,
+        activeCell,
+        hintsRevealed,
+        letterRevealed,
+        scribbleState,
+        scribbleLayout,
+        wrongAttempts
+      };
+      localStorage.setItem('crypticGameState', JSON.stringify(state));
+    }
+
+    function loadGameState() {
+      try {
+        const raw = localStorage.getItem('crypticGameState');
+        return raw ? JSON.parse(raw) : null;
+      } catch (err) {
+        localStorage.removeItem('crypticGameState');
+        return null;
+      }
+    }
+
+    function resetGame() {
+      localStorage.removeItem('crypticGameState');
+      solved         = CLUES.map(() => false);
+      inputs         = CLUES.map(c => Array(c.answer.length).fill(''));
+      active         = 0;
+      activeCell     = null;
+      hintsRevealed  = CLUES.map(() => ({ indicators: false, fodder: false, definition: false, letter: false }));
+      letterRevealed = CLUES.map(() => []);
+      scribbleState  = CLUES.map(() => null);
+      wrongAttempts  = CLUES.map(() => 0);
+      closeScribble();
+      hideHintSummary();
+      renderClue();
+      renderGrid();
+      buildKeyboard();
+      updateProgress();
+      updateClueCounter();
+      focusHidden();
+      saveGameState();
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('letter-grid');
+      grid.innerHTML = '';
+      const c = CLUES[active];
+      const cur = solved[active] ? -1 : getCursor();
+      c.answer.split('').forEach((_, j) => {
+        const btn = document.createElement('button');
+        btn.className = 'letter-tile';
+        btn.textContent = inputs[active][j] || '';
+        if (solved[active]) {
+          btn.textContent = c.answer[j];
+          btn.classList.add('correct');
+        } else if (letterRevealed[active].includes(j)) {
+          btn.classList.add('hinted');
+        } else if (j === cur) {
+          btn.classList.add('active');
+        }
+        btn.addEventListener('click', () => selectCell(j));
+        grid.appendChild(btn);
+      });
+      const filled = inputs[active].every(l => l !== '');
+      document.getElementById('btn-check').disabled = !filled || solved[active];
+      document.getElementById('btn-check').classList.toggle('pink', filled && !solved[active]);
+      document.getElementById('btn-check').classList.toggle('white', !filled || solved[active]);
+      if (document.getElementById('scribble-content').classList.contains('open')) updateScribbleStatus();
+      renderAttemptDots();
+    }
+
+    document.getElementById('btn-scribble').addEventListener('click', () => {
+      document.getElementById('scribble-content').classList.contains('open') ? closeScribble() : openScribble();
+    });
+
+    function openScribble() {
+      document.getElementById('main-content').style.display = 'none';
+      document.getElementById('scribble-content').classList.add('open');
+      scribbleState[active] ? renderSavedTiles() : requestAnimationFrame(initScribbleTiles);
+      renderScribbleRow();
+      updateScribbleStatus();
+      renderScribbleLayoutButtons();
+    }
+
+    function closeScribble() {
+      document.getElementById('main-content').style.display = '';
+      document.getElementById('scribble-content').classList.remove('open');
+      focusHidden();
+    }
+
+    function clearTileEls(area) {
+      area.querySelectorAll('.scribble-tile').forEach(t => t.remove());
+    }
+
+    function getScribblePositions(count, areaW, areaH, ts, mode) {
+      const positions = [];
+      if (mode === 'circle') {
+        const centerX = areaW / 2 - ts / 2;
+        const centerY = areaH / 2 - ts / 2;
+        const radius = Math.max(40, Math.min(areaW, areaH) / 2 - ts - 12);
+        for (let i = 0; i < count; i++) {
+          const angle = (Math.PI * 2 * i) / count - Math.PI / 2;
+          positions.push({
+            x: Math.max(4, Math.min(areaW - ts - 4, centerX + Math.cos(angle) * radius)),
+            y: Math.max(4, Math.min(areaH - ts - 4, centerY + Math.sin(angle) * radius))
+          });
+        }
+      } else {
+        const totalWidth = count * (ts + 8) - 8;
+        const startX = Math.max(8, (areaW - totalWidth) / 2);
+        const startY = Math.max(8, (areaH - ts) / 2);
+        for (let i = 0; i < count; i++) {
+          positions.push({
+            x: Math.max(4, Math.min(areaW - ts - 4, startX + i * (ts + 8))),
+            y: startY
+          });
+        }
+      }
+      return positions;
+    }
+
+    function renderSavedTiles() {
+      const area = document.getElementById('tiles-area');
+      clearTileEls(area);
+      const rect = area.getBoundingClientRect();
+      const areaW = rect.width || 300, areaH = rect.height || 160, ts = 46;
+      scribbleState[active].forEach((tile, i) => {
+        const el = makeTileEl(tile.letter);
+        const left = Math.max(4, Math.min(areaW - ts - 4, tile.x));
+        const top = Math.max(4, Math.min(areaH - ts - 4, tile.y));
+        tile.x = left;
+        tile.y = top;
+        el.style.left = left + 'px';
+        el.style.top  = top + 'px';
+        makeDraggable(el, area, i);
+        area.appendChild(el);
+      });
+      renderScribbleLayoutButtons();
+    }
+
+    function setScribbleLayout(mode) {
+      scribbleLayout = mode;
+      saveGameState();
+      renderScribbleLayoutButtons();
+      if (!scribbleState[active]) {
+        initScribbleTiles();
+        return;
+      }
+      const area = document.getElementById('tiles-area');
+      const rect = area.getBoundingClientRect();
+      const areaW = rect.width || 300, areaH = rect.height || 160, ts = 46;
+      const positions = getScribblePositions(scribbleState[active].length, areaW, areaH, ts, mode);
+      scribbleState[active].forEach((tile, i) => {
+        tile.x = positions[i].x;
+        tile.y = positions[i].y;
+      });
+      renderSavedTiles();
+    }
+
+    function renderScribbleLayoutButtons() {
+      document.querySelectorAll('.scribble-layout-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.toLowerCase().includes(scribbleLayout));
+      });
+    }
+
+    function initScribbleTiles() {
+      const area = document.getElementById('tiles-area');
+      clearTileEls(area);
+      const letters = CLUES[active].answer.split('');
+      shuffleArray(letters);
+      const rect = area.getBoundingClientRect();
+      const areaW = rect.width || 300, areaH = rect.height || 160, ts = 46;
+      const positions = getScribblePositions(letters.length, areaW, areaH, ts, scribbleLayout || 'grid');
+      scribbleState[active] = letters.map((letter, i) => ({
+        letter,
+        x: positions[i].x,
+        y: positions[i].y
+      }));
+      scribbleState[active].forEach((tile, i) => {
+        const el = makeTileEl(tile.letter);
+        el.style.left = tile.x + 'px';
+        el.style.top  = tile.y + 'px';
+        makeDraggable(el, area, i);
+        area.appendChild(el);
+      });
+      saveGameState();
+      renderScribbleLayoutButtons();
+    }
+
+    function isOverScribbleSolution(x, y) {
+      const row = document.getElementById('scribble-row');
+      if (!row) return false;
+      const rect = row.getBoundingClientRect();
+      return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+    }
+
+    function addTileLetter(letter) {
+      if (solved[active]) return;
+      const freeIndex = inputs[active].findIndex((l, i) => l === '' && !letterRevealed[active].includes(i));
+      if (freeIndex < 0) return;
+      inputs[active][freeIndex] = letter;
+      activeCell = nextEditableIndex(freeIndex + 1);
+      renderGrid();
+      renderScribbleRow();
+      saveGameState();
+    }
+
+    function makeTileEl(letter) {
+      const el = document.createElement('div');
+      el.className = 'scribble-tile';
+      el.textContent = letter;
+      el.addEventListener('click', () => addTileLetter(letter));
+      return el;
+    }
+
+    function makeDraggable(el, container, tileIdx) {
+      let startX, startY, startLeft, startTop, lastPointer;
+      function onDown(e) {
+        e.preventDefault();
+        el.classList.add('dragging');
+        const p = e.touches ? e.touches[0] : e;
+        startX = p.clientX; startY = p.clientY;
+        startLeft = parseInt(el.style.left) || 0;
+        startTop  = parseInt(el.style.top)  || 0;
+        lastPointer = { x: startX, y: startY };
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('touchend', onUp);
+      }
+      function onMove(e) {
+        e.preventDefault();
+        const p = e.touches ? e.touches[0] : e;
+        lastPointer = { x: p.clientX, y: p.clientY };
+        const rect = container.getBoundingClientRect();
+        const newLeft = Math.max(0, Math.min(rect.width  - el.offsetWidth,  startLeft + p.clientX - startX));
+        const newTop  = Math.max(0, Math.min(rect.height - el.offsetHeight, startTop  + p.clientY - startY));
+        el.style.left = newLeft + 'px';
+        el.style.top  = newTop  + 'px';
+        if (scribbleState[active] && tileIdx !== undefined) {
+          scribbleState[active][tileIdx].x = newLeft;
+          scribbleState[active][tileIdx].y = newTop;
+        }
+        const trash = document.getElementById('trash-zone');
+        if (trash) {
+          const tr = trash.getBoundingClientRect();
+          const over = p.clientX >= tr.left && p.clientX <= tr.right && p.clientY >= tr.top && p.clientY <= tr.bottom;
+          trash.classList.toggle('over', over);
+        }
+        const row = document.getElementById('scribble-row');
+        if (row) {
+          const overSolution = isOverScribbleSolution(p.clientX, p.clientY);
+          row.classList.toggle('over', overSolution);
+        }
+      }
+      function onUp() {
+        el.classList.remove('dragging');
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', onUp);
+        const row = document.getElementById('scribble-row');
+        if (row) row.classList.remove('over');
+        const trash = document.getElementById('trash-zone');
+        if (trash && trash.classList.contains('over')) {
+          trash.classList.remove('over');
+          if (scribbleState[active] && tileIdx !== undefined) {
+            scribbleState[active].splice(tileIdx, 1);
+            renderSavedTiles();
+            saveGameState();
+          }
+          return;
+        }
+        if (lastPointer && isOverScribbleSolution(lastPointer.x, lastPointer.y)) {
+          addTileLetter(el.textContent);
+        }
+        saveGameState();
+      }
+      el.addEventListener('mousedown', onDown);
+      el.addEventListener('touchstart', onDown, { passive: false });
+    }
+
+    function shuffleTiles() {
+      if (!scribbleState[active]) return initScribbleTiles();
+      const state = scribbleState[active];
+      const letters = state.map(t => t.letter);
+      shuffleArray(letters);
+      letters.forEach((l, i) => { state[i].letter = l; });
+      renderSavedTiles();
+      saveGameState();
+    }
+
+    function resetTilePositions() { scribbleState[active] = null; requestAnimationFrame(() => { initScribbleTiles(); saveGameState(); }); }
+
+    function openHintsModal() { renderHintsModal(); document.getElementById('hints-overlay').classList.add('open'); }
+    function closeHintsModal() { document.getElementById('hints-overlay').classList.remove('open'); }
+    function closeHintsIfOutside(e) { if (e.target === document.getElementById('hints-overlay')) closeHintsModal(); }
+
+    function renderHintsModal() {
+      const hr = hintsRevealed[active];
+      const letterCount = letterRevealed[active].length;
+      const letterTotal = CLUES[active].answer.length;
+      const opts = [
+        { key: 'indicators', label: 'mostrar indicadores', color: 'var(--pink)', desc: 'Mostra a palavra que indica a operação de construção da resposta.' },
+        { key: 'fodder',     label: 'mostrar condutor',    color: 'var(--yellow)', desc: 'Mostra as palavras usadas como matéria-prima para formar a resposta.' },
+        { key: 'definition', label: 'mostrar definição',   color: 'var(--blue)', desc: 'Mostra a parte da pista que define o significado da resposta.' },
+        { key: 'letter',     label: `mostrar letra (${letterCount}/${letterTotal})`, color: 'var(--yellow)', desc: 'Revela uma letra correta da resposta para ajudar a completar.', sep: true },
+      ];
+      document.getElementById('hints-list').innerHTML = opts.map(o => `
+        ${o.sep ? '<div class="hint-separator"></div>' : ''}
+        <button class="hint-option" onclick="useHint('${o.key}')" ${o.key === 'letter' ? (letterCount >= letterTotal ? 'disabled' : '') : (hr[o.key] ? 'disabled' : '')}>
+          <span class="hint-label">
+            <span class="hint-bar" style="background:${o.color}"></span>
+            <span class="hint-text">${o.label}</span>
+          </span>
+          <div class="hint-tip">${o.desc}</div>
+        </button>`).join('');
+    }
+
+    function useHint(type) {
+      hintsRevealed[active][type] = true;
+      if (type === 'letter') {
+        const ans = CLUES[active].answer;
+        const avail = ans.split('').map((_, i) => i).filter(i => !letterRevealed[active].includes(i));
+        if (avail.length) {
+          const idx = avail[Math.floor(Math.random() * avail.length)];
+          letterRevealed[active].push(idx);
+          inputs[active][idx] = ans[idx];
+        }
+        renderGrid();
+        updateScribbleStatus();
+      }
+      renderClue();
+      saveGameState();
+      updateClueCounter();
+      closeHintsModal();
+    }
+
+    function syncScribbleAnswer(value) {
+      const answer = CLUES[active].answer;
+      const letters = value.toUpperCase().replace(/[^A-ZÀ-Ÿ]/g, '').slice(0, answer.length).split('');
+      inputs[active] = answer.split('').map((letter, i) =>
+        letterRevealed[active].includes(i) ? letter : (letters[i] || '')
+      );
+      activeCell = nextEditableIndex(0);
+      renderGrid();
+      renderScribbleRow();
+      updateScribbleStatus();
+      saveGameState();
+    }
+
+    function updateScribbleStatus() {
+      const countEl = document.getElementById('scribble-letter-count');
+      const answer = CLUES[active].answer;
+      if (countEl) countEl.textContent = `${answer.length} letras`;
+      renderScribbleRow();
+    }
+
+    function checkAnswer() {
+      const ans = inputs[active].join('');
+      const tiles = document.querySelectorAll('.letter-tile');
+      if (ans === CLUES[active].answer) {
+        solved[active] = true;
+        activeCell = null;
+        saveGameState();
+        tiles.forEach(t => { t.classList.remove('active','wrong','hinted'); t.classList.add('correct'); });
+        const grid = document.getElementById('letter-grid');
+        grid.classList.remove('scale-in');
+        void grid.offsetWidth;
+        grid.classList.add('scale-in');
+        grid.addEventListener('animationend', () => grid.classList.remove('scale-in'), { once: true });
+        showHintSummary(active);
+        updateProgress();
+        setTimeout(() => {
+          if (solved.every(Boolean)) { showFinish(); return; }
+          hideHintSummary();
+          const next = solved.findIndex((v, i) => !v && i > active);
+          active = next >= 0 ? next : solved.findIndex(v => !v);
+          activeCell = null;
+          renderClue(); renderGrid(); focusHidden();
+        }, 1800);
+      } else {
+        wrongAttempts[active] = (wrongAttempts[active] || 0) + 1;
+        tiles.forEach(t => t.classList.add('wrong'));
+        const grid = document.getElementById('letter-grid');
+        grid.classList.remove('shake');
+        void grid.offsetWidth;
+        grid.classList.add('shake');
+        grid.addEventListener('animationend', () => grid.classList.remove('shake'), { once: true });
+        saveGameState();
+        setTimeout(() => {
+          inputs[active] = CLUES[active].answer.split('').map((l, i) => letterRevealed[active].includes(i) ? l : '');
+          renderGrid(); focusHidden();
+        }, 700);
+      }
+    }
+
+    function updateProgress() {
+      const el = document.getElementById('progress-dots');
+      if (!el) return;
+      el.innerHTML = CLUES.map((_, i) => {
+        const hr = hintsRevealed[i];
+        const par = solved[i] && !hr.indicators && !hr.fodder && !hr.definition && !hr.letter;
+        const cls = solved[i] ? (par ? 'par' : 'solved') : (i === active ? 'active' : '');
+        return `<div class="progress-dot ${cls}" onclick="goToClue(${i})"></div>`;
+      }).join('');
+      updateClueCounter();
+    }
+
+    function goToClue(index) {
+      if (index < 0 || index >= CLUES.length) return;
+      active = index;
+      activeCell = null;
+      saveGameState();
+      renderClue();
+      renderGrid();
+      updateProgress();
+    }
+
+    function renderScribbleRow() {
+      const row = document.getElementById('scribble-row');
+      if (!row) return;
+      row.innerHTML = '';
+      const answer = CLUES[active].answer;
+      answer.split('').forEach((_, i) => {
+        const cell = document.createElement('div');
+        cell.className = 'scribble-cell';
+        if (letterRevealed[active].includes(i)) cell.classList.add('hinted');
+        if (activeCell === i && !solved[active]) cell.classList.add('active');
+        cell.textContent = inputs[active][i] || '';
+        row.appendChild(cell);
+      });
+    }
+
+    function showFinish() {
+      document.getElementById('game').style.display = 'none';
+      document.getElementById('finish').classList.add('open');
+      const totalHints = hintsRevealed.reduce((sum, hr) =>
+        sum + (hr.indicators?1:0) + (hr.fodder?1:0) + (hr.definition?1:0) + (hr.letter?1:0), 0);
+      const parCount = CLUES.filter((_, i) => {
+        const hr = hintsRevealed[i];
+        return !hr.indicators && !hr.fodder && !hr.definition && !hr.letter;
+      }).length;
+      const dots = CLUES.map((_, i) => {
+        const hr = hintsRevealed[i];
+        return (!hr.indicators && !hr.fodder && !hr.definition && !hr.letter) ? '🟢' : '🟡';
+      }).join('');
+      document.getElementById('finish-stats').innerHTML =
+        `<div style="font-size:22px;margin-bottom:6px">${dots}</div>` +
+        `<strong>${parCount}</strong> pista${parCount !== 1 ? 's' : ''} sem dicas &middot; ` +
+        `<strong>${totalHints}</strong> dica${totalHints !== 1 ? 's' : ''} usada${totalHints !== 1 ? 's' : ''}`;
+    }
+
+    function restart() {
+      localStorage.removeItem('crypticGameState');
+      document.getElementById('finish').classList.remove('open');
+      document.getElementById('game').style.display = '';
+      init();
+    }
+
+    function focusHidden() { const h = document.getElementById('hi'); h.value = ''; h.focus(); }
+
+    document.getElementById('hi').addEventListener('keydown', e => {
+      if (solved[active]) return;
+      if (e.key === 'Enter') {
+        const filled = inputs[active].every(l => l !== '');
+        if (filled) {
+          e.preventDefault();
+          checkAnswer();
+          return;
+        }
+      }
+      if (e.key === 'Backspace') {
+        e.preventDefault();
+        const c = getCursor();
+        if (inputs[active][c] && !letterRevealed[active].includes(c)) {
+          inputs[active][c] = '';
+          activeCell = c;
+        } else {
+          for (let j = c - 1; j >= 0; j--) {
+            if (!letterRevealed[active].includes(j)) {
+              inputs[active][j] = ''; activeCell = j; break;
+            }
+          }
+        }
+        renderGrid(); saveGameState(); return;
+      }
+      if (/^[a-zA-ZÀ-ÿ]$/.test(e.key)) {
+        e.preventDefault();
+        const c = getCursor();
+        if (c < CLUES[active].answer.length) {
+          inputs[active][c] = e.key.toUpperCase();
+          activeCell = nextEditableIndex(c + 1);
+          renderGrid();
+          saveGameState();
+        }
+      }
+    });
+
+    const ROWS = [['Q','W','E','R','T','Y','U','I','O','P'],['A','S','D','F','G','H','J','K','L'],['Z','X','C','V','B','N','M','⌫']];
+
+    function buildKeyboard() {
+      ROWS.forEach((row, ri) => {
+        const el = document.getElementById('kb-row-' + ri);
+        el.innerHTML = '';
+        row.forEach(k => {
+          const btn = document.createElement('button');
+          btn.className = 'kb-key' + (k === '⌫' ? ' bksp' : '');
+          btn.textContent = k;
+          btn.addEventListener('click', () => handleKey(k));
+          el.appendChild(btn);
+        });
+      });
+    }
+
+    function handleKey(k) {
+      if (solved[active]) return;
+      if (k === '⌫') {
+        const c = getCursor();
+        if (inputs[active][c] && !letterRevealed[active].includes(c)) {
+          inputs[active][c] = '';
+          activeCell = c;
+        } else {
+          for (let j = c - 1; j >= 0; j--) {
+            if (!letterRevealed[active].includes(j)) {
+              inputs[active][j] = '';
+              activeCell = j;
+              break;
+            }
+          }
+        }
+      } else {
+        const c = getCursor();
+        if (c < CLUES[active].answer.length) {
+          inputs[active][c] = k;
+          activeCell = nextEditableIndex(c + 1);
+        }
+      }
+      renderGrid(); focusHidden(); saveGameState();
+    }
+
+    function clearCurrentInput() {
+      inputs[active] = CLUES[active].answer.split('').map((letter, i) => letterRevealed[active].includes(i) ? letter : '');
+      activeCell = null;
+      renderGrid();
+      focusHidden();
+      saveGameState();
+    }
+
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
+    }
+
+    document.addEventListener('click', e => { if (!e.target.closest('#keyboard') && !e.target.closest('#hi')) focusHidden(); });
+
+    function fitClueText() {
+      const box = document.getElementById('clue-box');
+      const len = (box.textContent || '').replace(/\s+/g, ' ').trim().length;
+      box.style.fontSize = len > 70 ? '15px' : len > 55 ? '17px' : '20px';
+    }
+
+    function renderAttemptDots() {
+      const el = document.getElementById('attempt-dots');
+      if (!el) return;
+      const count = wrongAttempts ? (wrongAttempts[active] || 0) : 0;
+      el.innerHTML = Array(count).fill('<div class="attempt-dot"></div>').join('');
+    }
+
+    function showHintSummary(clueIdx) {
+      const c = CLUES[clueIdx];
+      const parts = [
+        { label: 'Indicador', items: c.hints.indicators, color: 'var(--blue)' },
+        { label: 'Condutor',  items: c.hints.fodder,     color: 'var(--pink)' },
+        { label: 'Definição', items: c.hints.definition, color: 'var(--yellow)' },
+      ];
+      document.getElementById('hint-summary-body').innerHTML = parts
+        .map(p => `<span style="background:${p.color};border-radius:3px;padding:1px 6px;margin-right:2px;font-weight:700">${p.label}:</span> ${p.items.join(', ')}<br>`)
+        .join('');
+      const el = document.getElementById('hint-summary');
+      el.classList.remove('visible');
+      void el.offsetWidth;
+      el.classList.add('visible');
+    }
+
+    function hideHintSummary() {
+      const el = document.getElementById('hint-summary');
+      if (el) el.classList.remove('visible');
+    }
+
+    function shareResult() {
+      const dots = CLUES.map((_, i) => {
+        const hr = hintsRevealed[i];
+        return (!hr.indicators && !hr.fodder && !hr.definition && !hr.letter) ? '🟢' : '🟡';
+      }).join('');
+      const totalHints = hintsRevealed.reduce((sum, hr) =>
+        sum + (hr.indicators?1:0) + (hr.fodder?1:0) + (hr.definition?1:0) + (hr.letter?1:0), 0);
+      const text = `🎂 Jogo Críptico — Aniversário Elisa\n${dots}\n${CLUES.length}/${CLUES.length} pistas · ${totalHints} dica${totalHints !== 1 ? 's' : ''}`;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+          const btn = document.querySelector('.btn-share');
+          const orig = btn.textContent;
+          btn.textContent = '✓ copiado!';
+          setTimeout(() => { btn.textContent = orig; }, 2000);
+        });
+      }
+    }
+
+
+    function startGame() {
+      const overlay = document.getElementById('start-overlay');
+      if (overlay) overlay.classList.add('hidden');
+      focusHidden();
+    }
+
+    function openHowTo() {
+      const overlay = document.getElementById('how-overlay');
+      if (overlay) overlay.classList.remove('hidden');
+    }
+
+    function closeHowTo() {
+      const overlay = document.getElementById('how-overlay');
+      if (overlay) overlay.classList.add('hidden');
+      focusHidden();
+    }
+
+    function closeHowToIfOutside(event) {
+      if (event.target && event.target.id === 'how-overlay') closeHowTo();
+    }
+
+    init();
+
+  </script>
+</body>
+</html>
