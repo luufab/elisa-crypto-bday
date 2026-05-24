@@ -2015,7 +2015,10 @@
       init();
     }
 
-    function focusHidden() { const h = document.getElementById('hi'); h.value = ''; h.focus(); }
+    function focusHidden() {
+  const h = document.getElementById('hi');
+  if (h) h.value = '';
+}
 
     document.getElementById('hi').addEventListener('keydown', e => {
       if (solved[active]) return;
